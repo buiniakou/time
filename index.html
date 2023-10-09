@@ -2,44 +2,94 @@
 <html>
 <head>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #container {
+      padding: 20px;
+    }
+
+    #title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
     #progress-container {
       width: 100%;
-      background-color: #ccc;
+      background-color: #eee;
       position: relative;
+      height: 50px;
+      border-radius: 5px;
     }
 
     #progress-bar {
-      height: 30px;
+      height: 100%;
       background-color: #4CAF50;
       width: 0;
       position: absolute;
+      border-radius: 5px;
+      font-family: "Helvetica Neue", sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     #time-labels {
       display: flex;
       justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    #hour-lines {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #hour-lines::before {
+      content: "";
+      height: 100%;
+      width: 1px;
+      background-color: #ccc;
+      position: absolute;
+    }
+
+    #hour-lines span {
+      position: absolute;
+      transform: translateX(-50%);
     }
   </style>
 </head>
 <body>
-  <div id="time-labels">
-    <span>9:00 AM</span>
-    <span>10:00 AM</span>
-    <span>11:00 AM</span>
-    <span>12:00 PM</span>
-    <span>1:00 PM</span>
-    <span>2:00 PM</span>
-    <span>3:00 PM</span>
-    <span>4:00 PM</span>
-    <span>5:00 PM</span>
-  </div>
-  <div id="progress-container">
-    <div id="progress-bar"></div>
+  <div id="container">
+    <div id="title">Work Progress</div>
+    <div id="progress-container">
+      <div id="progress-bar">
+        <span id="current-time"></span>
+      </div>
+      <div id="hour-lines"></div>
+    </div>
+    <div id="time-labels">
+      <span>9:00 AM</span>
+      <span>10:00 AM</span>
+      <span>11:00 AM</span>
+      <span>12:00 PM</span>
+      <span>1:00 PM</span>
+      <span>2:00 PM</span>
+      <span>3:00 PM</span>
+      <span>4:00 PM</span>
+      <span>5:00 PM</span>
+    </div>
   </div>
 
   <script>
     function updateProgressBar() {
       const progressBar = document.getElementById("progress-bar");
+      const currentTimeSpan = document.getElementById("current-time");
       const now = new Date();
       const start = new Date(now);
       start.setHours(9, 0, 0, 0);
@@ -48,13 +98,16 @@
 
       if (now < start) {
         progressBar.style.width = "0";
+        currentTimeSpan.textContent = "Not Started";
       } else if (now > end) {
         progressBar.style.width = "100%";
+        currentTimeSpan.textContent = "Completed";
       } else {
         const totalDuration = end - start;
         const currentDuration = now - start;
         const progress = (currentDuration / totalDuration) * 100;
         progressBar.style.width = progress + "%";
+        currentTimeSpan.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       }
     }
 
