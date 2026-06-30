@@ -3,347 +3,219 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clock</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Lora:wght@400&display=swap" rel="stylesheet">
+<title>Work Progress</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; }
-body { font-family: 'Inter', system-ui, sans-serif; background: #111; display: flex; align-items: center; justify-content: center; padding: 1.5rem; min-height: 100vh; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f2f1ed; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.card { background: #fff; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08); padding: 2rem; width: 100%; max-width: 720px; }
+.face-tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.face-tab { padding: 6px 14px; border-radius: 20px; border: 0.5px solid rgba(0,0,0,0.18); background: transparent; color: #666; font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+.face-tab.active { background: #111; color: #fff; border-color: #111; }
+.face-tab:hover:not(.active) { background: #f5f5f3; color: #111; }
+.face { display: none; }
+.face.visible { display: block; }
+.section-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
 
-.card { width: 100%; max-width: 680px; border-radius: 16px; overflow: hidden; }
+/* Face 0 — Classic bar */
+.bar-wrap { position: relative; height: 56px; background: #f5f5f3; border-radius: 10px; border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 12px; }
+.bar-fill { height: 100%; border-radius: 10px; background: #2a78d6; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; transition: width 0.5s ease; }
+.bar-time-in  { font-size: 13px; font-weight: 500; color: #fff; white-space: nowrap; }
+.bar-time-out { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 13px; }
+.hour-ticks { position: relative; height: 8px; margin-bottom: 4px; }
+.hour-tick { position: absolute; top: 0; width: 1px; height: 8px; background: rgba(0,0,0,0.1); transform: translateX(-50%); }
+.time-labels { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
 
-/* Controls */
-.ctrl { display: flex; align-items: center; gap: 5px; padding: 10px 14px; flex-wrap: wrap; }
-.fb, .tb { padding: 5px 13px; border-radius: 20px; border: 1px solid transparent; background: transparent; font-size: 12px; cursor: pointer; letter-spacing: 0.02em; transition: background 0.15s, color 0.15s; font-family: 'Inter', system-ui; }
-.div-sep { width: 1px; height: 18px; margin: 0 3px; }
+/* Face 1 — Ring */
+.ring-face { display: flex; gap: 2rem; align-items: center; }
+.ring-stats { flex: 1; }
+.stat-row { padding: 10px 0; border-bottom: 0.5px solid rgba(0,0,0,0.08); }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { font-size: 12px; color: #999; margin-bottom: 2px; }
+.stat-value { font-size: 18px; font-weight: 500; color: #111; }
 
-/* Face container */
-.display { min-height: 300px; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
-.face { display: none; align-items: center; justify-content: center; flex-direction: column; width: 100%; }
-.face.on { display: flex; }
+/* Face 2 — Segments */
+.segments-wrap { display: flex; gap: 3px; margin-bottom: 10px; }
+.seg { flex: 1; height: 36px; border-radius: 4px; background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.1); transition: background 0.3s, border-color 0.3s; }
+.seg.done    { background: #2a78d6; border-color: #2a78d6; }
+.seg.current { background: #85b7eb; border-color: #85b7eb; }
+.seg-labels  { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-bottom: 1rem; }
+.seg-legend  { display: flex; gap: 12px; align-items: center; font-size: 13px; color: #666; flex-wrap: wrap; }
+.seg-dot     { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-/* DIGITAL */
-.dig-time { font-size: clamp(52px, 11vw, 108px); font-weight: 500; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
-.dig-ampm { font-size: clamp(14px, 3vw, 24px); font-weight: 400; opacity: 0.42; margin-top: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
-.dig-date { font-size: 12px; opacity: 0.35; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 14px; }
+/* Face 3 — Minimal */
+.minimal-wrap { text-align: center; padding: 1rem 0; }
+.minimal-time { font-size: clamp(48px, 10vw, 80px); font-weight: 500; color: #111; line-height: 1; margin-bottom: 6px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.minimal-sub  { font-size: 14px; color: #999; margin-bottom: 1.5rem; }
+.minimal-bar  { height: 4px; background: #eeede9; border-radius: 2px; overflow: hidden; max-width: 420px; margin: 0 auto 8px; }
+.minimal-fill { height: 100%; background: #111; border-radius: 2px; transition: width 0.5s; }
+.minimal-ends { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; max-width: 420px; margin: 0 auto; }
 
-/* ANALOG */
-.a-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+/* Face 4 — Timeline */
+.heat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 10px; }
+.heat-cell { height: 52px; border-radius: 6px; display: flex; flex-direction: column; justify-content: flex-end; padding: 5px 7px; background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.08); color: #aaa; }
+.heat-cell.past { background: #2a78d6; border-color: #2a78d6; color: rgba(255,255,255,0.85); }
+.heat-cell.now  { background: #1baf7a; border-color: #1baf7a; color: #fff; }
+.heat-lbl { font-size: 10px; font-weight: 500; }
+.heat-pct { font-size: 9px; opacity: 0.75; }
 
-/* FLIP */
-.flip-row { display: flex; align-items: center; gap: 5px; }
-.flip-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.flip-cards { display: flex; gap: 3px; }
-.flip-card { border-radius: 7px; display: flex; align-items: center; justify-content: center; width: 52px; height: 70px; overflow: hidden; }
-.flip-n { font-size: 52px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
-@keyframes flipit { 0%{transform:scaleY(1);opacity:1} 45%{transform:scaleY(0.04);opacity:0.3} 55%{transform:scaleY(0.04);opacity:0.3} 100%{transform:scaleY(1);opacity:1} }
-.flip-card.pop .flip-n { animation: flipit 0.32s cubic-bezier(0.4,0,0.2,1); }
-.flip-lbl { font-size: 10px; opacity: 0.3; letter-spacing: 0.1em; text-transform: uppercase; }
-.flip-sep { font-size: 46px; font-weight: 300; opacity: 0.3; margin-bottom: 14px; line-height: 1; }
-.flip-ampm { font-size: 13px; opacity: 0.38; letter-spacing: 0.1em; margin-top: 8px; text-transform: uppercase; }
-
-/* BINARY */
-.bin-table { border-collapse: separate; border-spacing: 0; }
-.bin-table td { padding: 5px 5px; vertical-align: middle; }
-.bin-lbl { font-size: 11px; opacity: 0.32; letter-spacing: 0.06em; text-align: right; padding-right: 12px !important; }
-.bin-val { font-size: 12px; opacity: 0.35; font-variant-numeric: tabular-nums; padding-left: 12px !important; letter-spacing: 0.04em; }
-.bit { width: 18px; height: 18px; border-radius: 50%; transition: background 0.2s, opacity 0.2s; }
-.bit.on { opacity: 1; }
-.bit.off { opacity: 0.12; }
-.bit-pow { font-size: 9px; opacity: 0.25; text-align: center; padding: 1px 5px !important; }
-.bin-dots { display: flex; gap: 6px; align-items: center; }
-
-/* WORD */
-.word-txt { font-size: clamp(22px, 4.5vw, 38px); font-weight: 400; text-align: center; line-height: 1.45; max-width: 420px; font-family: 'Lora', Georgia, serif; }
-.word-exact { font-size: 12px; opacity: 0.32; margin-top: 14px; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
-
-/* Theme tray */
-.tray { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 0 14px; flex-wrap: wrap; }
-.sw { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s; flex-shrink: 0; }
-.sw:hover { transform: scale(1.2); }
+/* Status chips */
+.status-bar  { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; }
+.status-chip { background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: #666; display: flex; align-items: center; gap: 6px; }
+.status-chip i { font-size: 14px; }
+.chip-val { font-weight: 500; color: #111; }
 </style>
 </head>
 <body>
-<div class="card" id="card">
-  <div class="ctrl" id="ctrl">
-    <button class="fb" id="fb-digital" onclick="setFace('digital')">Digital</button>
-    <button class="fb" id="fb-analog"  onclick="setFace('analog')">Analog</button>
-    <button class="fb" id="fb-flip"    onclick="setFace('flip')">Flip</button>
-    <button class="fb" id="fb-binary"  onclick="setFace('binary')">Binary</button>
-    <button class="fb" id="fb-word"    onclick="setFace('word')">Word</button>
-    <div class="div-sep" id="dsep"></div>
-    <button class="tb" id="tb12h"  onclick="tog12h()">12h</button>
-    <button class="tb" id="tbsec"  onclick="togSec()">Secs</button>
-    <button class="tb" id="tbsmo"  onclick="togSmooth()">Smooth</button>
+<div class="card">
+  <div class="face-tabs">
+    <button class="face-tab active" onclick="switchFace(0)">Classic bar</button>
+    <button class="face-tab" onclick="switchFace(1)">Ring</button>
+    <button class="face-tab" onclick="switchFace(2)">Segments</button>
+    <button class="face-tab" onclick="switchFace(3)">Minimal</button>
+    <button class="face-tab" onclick="switchFace(4)">Timeline</button>
   </div>
 
-  <div class="display">
-
-    <div class="face" id="face-digital">
-      <div class="dig-time" id="d-time">00:00</div>
-      <div class="dig-ampm" id="d-ampm"></div>
-      <div class="dig-date" id="d-date"></div>
+  <div class="face visible" id="face-0">
+    <p class="section-label">Today's progress</p>
+    <div class="bar-wrap">
+      <div class="bar-fill" id="f0-fill" style="width:0%"><span class="bar-time-in" id="f0-in"></span></div>
+      <span class="bar-time-out" id="f0-out"></span>
     </div>
-
-    <div class="face" id="face-analog">
-      <div class="a-wrap">
-        <svg id="asvg" viewBox="0 0 200 200" width="240" height="240" role="img" aria-label="Analog clock">
-          <circle cx="100" cy="100" r="97" fill="none" id="a-ring" stroke-width="1" stroke="rgba(200,200,200,0.2)"/>
-          <g id="a-ticks"></g>
-          <g id="a-nums"></g>
-          <line id="a-h" x1="100" y1="100" x2="100" y2="52" stroke="#f0f0f0" stroke-width="5.5" stroke-linecap="round"/>
-          <line id="a-m" x1="100" y1="106" x2="100" y2="30" stroke="#f0f0f0" stroke-width="3.5" stroke-linecap="round"/>
-          <line id="a-s" x1="100" y1="118" x2="100" y2="24" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="100" cy="100" r="5" fill="#f0f0f0" id="a-dot"/>
-          <circle cx="100" cy="100" r="2.5" fill="#ef4444"/>
-        </svg>
-        <div class="dig-date" id="a-date"></div>
-      </div>
-    </div>
-
-    <div class="face" id="face-flip">
-      <div class="flip-row">
-        <div class="flip-group">
-          <div class="flip-cards">
-            <div class="flip-card" id="fc-h0"><div class="flip-n" id="fv-h0">0</div></div>
-            <div class="flip-card" id="fc-h1"><div class="flip-n" id="fv-h1">0</div></div>
-          </div>
-          <div class="flip-lbl">hours</div>
-        </div>
-        <div class="flip-sep">:</div>
-        <div class="flip-group">
-          <div class="flip-cards">
-            <div class="flip-card" id="fc-m0"><div class="flip-n" id="fv-m0">0</div></div>
-            <div class="flip-card" id="fc-m1"><div class="flip-n" id="fv-m1">0</div></div>
-          </div>
-          <div class="flip-lbl">mins</div>
-        </div>
-        <div class="flip-sep" id="fsep">:</div>
-        <div class="flip-group" id="fsg">
-          <div class="flip-cards">
-            <div class="flip-card" id="fc-s0"><div class="flip-n" id="fv-s0">0</div></div>
-            <div class="flip-card" id="fc-s1"><div class="flip-n" id="fv-s1">0</div></div>
-          </div>
-          <div class="flip-lbl">secs</div>
-        </div>
-      </div>
-      <div class="flip-ampm" id="f-ampm"></div>
-    </div>
-
-    <div class="face" id="face-binary">
-      <table class="bin-table">
-        <thead>
-          <tr>
-            <td></td>
-            <td><div class="bin-dots" id="bin-pow"></div></td>
-            <td></td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td class="bin-lbl">H</td><td><div class="bin-dots" id="bd-h"></div></td><td class="bin-val" id="bv-h">00</td></tr>
-          <tr><td class="bin-lbl">M</td><td><div class="bin-dots" id="bd-m"></div></td><td class="bin-val" id="bv-m">00</td></tr>
-          <tr id="bin-s-row"><td class="bin-lbl">S</td><td><div class="bin-dots" id="bd-s"></div></td><td class="bin-val" id="bv-s">00</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="face" id="face-word">
-      <div class="word-txt" id="w-txt">loading…</div>
-      <div class="word-exact" id="w-exact"></div>
-    </div>
-
+    <div class="hour-ticks" id="f0-ticks"></div>
+    <div class="time-labels"><span>9 AM</span><span>10</span><span>11</span><span>12 PM</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5 PM</span></div>
   </div>
 
-  <div class="tray" id="tray"></div>
+  <div class="face" id="face-1">
+    <div class="ring-face">
+      <svg width="164" height="164" viewBox="0 0 160 160" role="img" aria-label="Progress ring" flex-shrink="0">
+        <circle cx="80" cy="80" r="68" fill="none" stroke="#f0f0ee" stroke-width="12"/>
+        <circle cx="80" cy="80" r="68" fill="none" stroke="#2a78d6" stroke-width="12" id="ring-c"
+          stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="427"
+          transform="rotate(-90 80 80)" style="transition:stroke-dashoffset 0.5s ease"/>
+        <text x="80" y="74" text-anchor="middle" fill="#111" font-size="22" font-weight="500" font-family="Inter,system-ui" id="ring-pct">0%</text>
+        <text x="80" y="94" text-anchor="middle" fill="#aaa" font-size="11" font-family="Inter,system-ui" id="ring-t">not started</text>
+      </svg>
+      <div class="ring-stats">
+        <div class="stat-row"><div class="stat-label">Time elapsed</div><div class="stat-value" id="r-el">—</div></div>
+        <div class="stat-row"><div class="stat-label">Time remaining</div><div class="stat-value" id="r-rem">—</div></div>
+        <div class="stat-row"><div class="stat-label">Finish at</div><div class="stat-value">5:00 PM</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="face" id="face-2">
+    <p class="section-label">Hour blocks</p>
+    <div class="segments-wrap" id="seg-wrap"></div>
+    <div class="seg-labels"><span>9 AM</span><span>10</span><span>11</span><span>12 PM</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5 PM</span></div>
+    <div class="seg-legend">
+      <div class="seg-dot" style="background:#2a78d6"></div><span>Completed</span>
+      <div class="seg-dot" style="background:#85b7eb;margin-left:6px"></div><span>In progress</span>
+      <div class="seg-dot" style="background:#f0f0ee;border:0.5px solid rgba(0,0,0,0.1);margin-left:6px"></div><span>Upcoming</span>
+    </div>
+  </div>
+
+  <div class="face" id="face-3">
+    <div class="minimal-wrap">
+      <div class="minimal-time" id="min-t">—</div>
+      <div class="minimal-sub" id="min-sub">—</div>
+      <div class="minimal-bar"><div class="minimal-fill" id="min-fill" style="width:0%"></div></div>
+      <div class="minimal-ends"><span>9:00 AM</span><span>5:00 PM</span></div>
+    </div>
+  </div>
+
+  <div class="face" id="face-4">
+    <p class="section-label">Hour by hour</p>
+    <div class="heat-grid" id="heat-grid"></div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-chip"><i class="ti ti-clock" aria-hidden="true"></i> Progress <span class="chip-val" id="chip-pct">—</span></div>
+    <div class="status-chip"><i class="ti ti-hourglass" aria-hidden="true"></i> Remaining <span class="chip-val" id="chip-rem">—</span></div>
+    <div class="status-chip"><i class="ti ti-calendar" aria-hidden="true"></i> <span id="chip-date">—</span></div>
+  </div>
 </div>
 
 <script>
-const THEMES = [
-  { n:'Midnight', bg:'#111111', text:'#f0f0f0', card:'#1a1a1a', dot:'#2a78d6', sep:'rgba(255,255,255,0.07)', lt:false },
-  { n:'Slate',    bg:'#1a2740', text:'#c8d8f0', card:'#22324e', dot:'#4a9ef5', sep:'rgba(255,255,255,0.07)', lt:false },
-  { n:'Forest',   bg:'#0f2318', text:'#9fe1cb', card:'#183326', dot:'#1d9e75', sep:'rgba(255,255,255,0.07)', lt:false },
-  { n:'Plum',     bg:'#1a0f2e', text:'#d0c4f8', card:'#251844', dot:'#9085e9', sep:'rgba(255,255,255,0.07)', lt:false },
-  { n:'Ember',    bg:'#1f1008', text:'#f5c47a', card:'#2e190c', dot:'#ef9f27', sep:'rgba(255,255,255,0.07)', lt:false },
-  { n:'Graphite', bg:'#2a2a28', text:'#d8d7d0', card:'#363634', dot:'#b4b2a9', sep:'rgba(255,255,255,0.07)', lt:false },
-  { n:'Rose',     bg:'#fbeaf0', text:'#72243e', card:'#f4c0d1', dot:'#d4537e', sep:'rgba(0,0,0,0.07)',       lt:true  },
-  { n:'Sky',      bg:'#e6f1fb', text:'#0c447c', card:'#b5d4f4', dot:'#2a78d6', sep:'rgba(0,0,0,0.07)',       lt:true  },
-  { n:'Paper',    bg:'#f5f4ef', text:'#2c2c2a', card:'#e5e4de', dot:'#5f5e5a', sep:'rgba(0,0,0,0.07)',       lt:true  },
-  { n:'Sage',     bg:'#eaf3de', text:'#274f0a', card:'#c0dd97', dot:'#3b6d11', sep:'rgba(0,0,0,0.07)',       lt:true  },
-];
-
-const S = { face:'digital', h12:true, secs:true, smooth:false, theme:0 };
-const q = id => document.getElementById(id);
-
-/* Build analog tick marks */
-(function() {
-  const tg = q('a-ticks'), ng = q('a-nums');
-  for (let i=0; i<60; i++) {
-    const a = i/60*2*Math.PI, major = i%5===0;
-    const r1=major?83:91, r2=97;
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('x1',100+r1*Math.sin(a)); l.setAttribute('y1',100-r1*Math.cos(a));
-    l.setAttribute('x2',100+r2*Math.sin(a)); l.setAttribute('y2',100-r2*Math.cos(a));
-    l.setAttribute('stroke-width',major?'2':'1'); l.setAttribute('class','a-tick');
-    tg.appendChild(l);
-  }
-  for (let i=1; i<=12; i++) {
-    const a=i/12*2*Math.PI, t=document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',100+72*Math.sin(a)); t.setAttribute('y',100-72*Math.cos(a));
-    t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
-    t.setAttribute('font-size','11'); t.setAttribute('font-family','Inter,system-ui');
-    t.setAttribute('class','a-num'); t.textContent=i; ng.appendChild(t);
+const SH = 9, EH = 17;
+function fmtDur(m) {
+  if (m <= 0) return '0m';
+  const h = Math.floor(m/60), mn = Math.round(m%60);
+  return h > 0 ? h+'h '+(mn>0?mn+'m':'') : mn+'m';
+}
+(function buildTicks() {
+  const w = document.getElementById('f0-ticks');
+  for (let i=0; i<=8; i++) { const d=document.createElement('div'); d.className='hour-tick'; d.style.left=(i/8*100)+'%'; w.appendChild(d); }
+})();
+(function buildSegs() {
+  const w = document.getElementById('seg-wrap');
+  for (let i=0; i<8; i++) { const s=document.createElement('div'); s.className='seg'; s.id='seg-'+i; w.appendChild(s); }
+})();
+(function buildHeat() {
+  const g = document.getElementById('heat-grid');
+  for (let i=0; i<8; i++) {
+    const c=document.createElement('div'); c.className='heat-cell'; c.id='heat-'+i;
+    const h=SH+i, lbl=h<12?h+'AM':(h===12?'12PM':(h-12)+'PM');
+    c.innerHTML='<div class="heat-lbl">'+lbl+'</div>'; g.appendChild(c);
   }
 })();
-
-/* Build binary dot containers */
-(function() {
-  const BITS = 6;
-  const pw = q('bin-pow');
-  for (let i=BITS-1; i>=0; i--) {
-    const s=document.createElement('div'); s.className='bit-pow';
-    s.style.cssText='width:18px;text-align:center;font-size:9px;opacity:0.25;';
-    s.textContent=Math.pow(2,i); pw.appendChild(s);
-  }
-  ['h','m','s'].forEach(r => {
-    const c=q('bd-'+r);
-    for (let i=BITS-1; i>=0; i--) {
-      const d=document.createElement('div'); d.className='bit off'; d.id='b-'+r+'-'+i; c.appendChild(d);
-    }
-  });
-})();
-
-/* Build theme swatches */
-(function() {
-  const tray=q('tray');
-  THEMES.forEach((t,i) => {
-    const s=document.createElement('div'); s.className='sw'; s.style.background=t.bg;
-    if (t.lt) s.style.outline='1px solid rgba(0,0,0,0.12)';
-    s.title=t.n; s.onclick=()=>applyTheme(i); tray.appendChild(s);
-  });
-})();
-
-function applyTheme(i) {
-  S.theme=i; const t=THEMES[i];
-  document.body.style.background=t.bg;
-  const card=q('card'); card.style.background=t.card; card.style.color=t.text;
-  const ctrl=q('ctrl');
-  ctrl.style.borderBottom='1px solid '+t.sep;
-  ctrl.style.background=t.lt?'rgba(0,0,0,0.04)':'rgba(255,255,255,0.04)';
-  const ab=t.lt?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.13)';
-  const bc=t.lt?'rgba(0,0,0,0.18)':'rgba(255,255,255,0.22)';
-  document.querySelectorAll('.fb,.tb').forEach(el => { el.style.color=t.text; el.style.borderColor=bc; el.style.background='transparent'; });
-  ['digital','analog','flip','binary','word'].forEach(f => {
-    q('fb-'+f).style.background=S.face===f?ab:'transparent';
-  });
-  q('tb12h').style.background=S.h12?ab:'transparent';
-  q('tbsec').style.background=S.secs?ab:'transparent';
-  q('tbsmo').style.background=S.smooth?ab:'transparent';
-  q('dsep').style.background=t.sep;
-  q('tray').style.borderTop='1px solid '+t.sep;
-  document.querySelectorAll('.sw').forEach((s,idx) => {
-    s.style.borderColor=idx===i?(t.lt?'rgba(0,0,0,0.5)':'rgba(255,255,255,0.9)'):'transparent';
-    s.style.transform=idx===i?'scale(1.15)':'';
-  });
-  const hc=t.text, tc=t.lt?'rgba(0,0,0,0.2)':'rgba(200,200,200,0.3)', nc=t.lt?'rgba(0,0,0,0.32)':'rgba(200,200,200,0.48)';
-  q('a-h').setAttribute('stroke',hc); q('a-m').setAttribute('stroke',hc); q('a-dot').setAttribute('fill',hc);
-  q('a-ring').setAttribute('stroke',tc);
-  document.querySelectorAll('.a-tick').forEach(el=>el.setAttribute('stroke',tc));
-  document.querySelectorAll('.a-num').forEach(el=>el.setAttribute('fill',nc));
-  document.querySelectorAll('.flip-card').forEach(el=>{ el.style.background=t.lt?'rgba(0,0,0,0.08)':'rgba(255,255,255,0.08)'; });
-  document.querySelectorAll('.bit.on').forEach(el=>el.style.background=t.dot);
-  document.querySelectorAll('.bit.off').forEach(el=>el.style.background=t.text);
+function switchFace(n) {
+  document.querySelectorAll('.face').forEach((f,i) => f.classList.toggle('visible', i===n));
+  document.querySelectorAll('.face-tab').forEach((t,i) => t.classList.toggle('active', i===n));
 }
-
-function setFace(f) {
-  S.face=f;
-  document.querySelectorAll('.face').forEach(el=>el.classList.remove('on'));
-  q('face-'+f).classList.add('on');
-  applyTheme(S.theme);
-}
-function tog12h() { S.h12=!S.h12; applyTheme(S.theme); }
-function togSec() {
-  S.secs=!S.secs;
-  q('fsep').style.display=S.secs?'':'none';
-  q('fsg').style.display=S.secs?'':'none';
-  q('bin-s-row').style.display=S.secs?'':'none';
-  applyTheme(S.theme);
-}
-function togSmooth() { S.smooth=!S.smooth; applyTheme(S.theme); }
-
-function rotHand(id,deg) { q(id).setAttribute('transform','rotate('+deg+',100,100)'); }
-function flipSet(cid,vid,v) {
-  const card=q(cid), val=q(vid);
-  if (val.textContent!==v) { val.textContent=v; card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
-}
-function setBits(row,n) {
-  const t=THEMES[S.theme];
-  for (let i=5; i>=0; i--) {
-    const el=q('b-'+row+'-'+i), on=!!(n&(1<<i));
-    el.className='bit '+(on?'on':'off');
-    el.style.background=on?t.dot:t.text;
-  }
-}
-
-const ONES=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
-const TENS=['','','twenty','thirty','forty','fifty'];
-function numW(n) { return n<=20?ONES[n]:TENS[Math.floor(n/10)]+(n%10?'-'+ONES[n%10]:''); }
-function toWordTime(now) {
-  const h=now.getHours(), m=now.getMinutes();
-  const h12=h%12||12, nxt=(h%12+1)%12||12;
-  const hw=numW(h12), nw=numW(nxt);
-  const sfx=h<12?' in the morning':h<17?' in the afternoon':' in the evening';
-  if (m===0)  return 'It is '+hw+sfx;
-  if (m<5)    return 'It is just past '+hw;
-  if (m<10)   return 'It is five past '+hw;
-  if (m<15)   return 'It is ten past '+hw;
-  if (m<20)   return 'It is quarter past '+hw;
-  if (m<25)   return 'It is twenty past '+hw;
-  if (m<30)   return 'It is twenty-five past '+hw;
-  if (m<35)   return 'It is half past '+hw;
-  if (m<40)   return 'It is twenty-five to '+nw;
-  if (m<45)   return 'It is twenty to '+nw;
-  if (m<50)   return 'It is quarter to '+nw;
-  if (m<55)   return 'It is ten to '+nw;
-  return 'It is five to '+nw;
-}
-
-let tmr;
-function tick() {
+function update() {
   const now=new Date();
-  const rh=now.getHours(), rm=now.getMinutes(), rs=now.getSeconds(), rms=now.getMilliseconds();
-  let dh=rh, ampm='';
-  if (S.h12) { ampm=rh>=12?'PM':'AM'; dh=rh%12||12; }
-  const hs=String(dh).padStart(2,'0'), ms=String(rm).padStart(2,'0'), ss=String(rs).padStart(2,'0');
+  const start=new Date(now); start.setHours(SH,0,0,0);
+  const end=new Date(now); end.setHours(EH,0,0,0);
+  const total=end-start, elapsed=Math.max(0,Math.min(now-start,total));
+  const pct=elapsed/total, pctInt=Math.round(pct*100);
+  const elMin=elapsed/60000, remMin=Math.max(0,(total-elapsed)/60000);
+  const before=now<start, after=now>end;
+  const ts=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
-  let dtStr=hs+':'+ms; if (S.secs) dtStr+=':'+ss;
-  q('d-time').textContent=dtStr;
-  q('d-ampm').textContent=S.h12?ampm:(rh<12?'AM':'PM');
-  q('d-date').textContent=now.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const fill=document.getElementById('f0-fill');
+  fill.style.width=(before?0:after?100:pct*100)+'%';
+  const tin=document.getElementById('f0-in'), tout=document.getElementById('f0-out');
+  if (before) { tin.textContent=''; tout.textContent='Not started'; }
+  else if (after) { tin.textContent='Done!'; tout.textContent=''; }
+  else if (pct>0.12) { tin.textContent=ts; tout.textContent=''; }
+  else { tin.textContent=''; tout.textContent=ts; }
 
-  const fs=S.smooth?rs+rms/1000:rs, fm=rm+fs/60, fh=(rh%12)+fm/60;
-  rotHand('a-h',fh*30); rotHand('a-m',fm*6);
-  q('a-s').style.display=S.secs?'':'none';
-  if (S.secs) rotHand('a-s',fs*6);
-  q('a-date').textContent=now.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+  const circ=2*Math.PI*68;
+  document.getElementById('ring-c').style.strokeDashoffset=before?circ:after?0:circ*(1-pct);
+  document.getElementById('ring-pct').textContent=pctInt+'%';
+  document.getElementById('ring-t').textContent=before?'not started':after?'complete':ts;
+  document.getElementById('r-el').textContent=before?'—':fmtDur(elMin);
+  document.getElementById('r-rem').textContent=after?'—':fmtDur(remMin);
 
-  flipSet('fc-h0','fv-h0',hs[0]); flipSet('fc-h1','fv-h1',hs[1]);
-  flipSet('fc-m0','fv-m0',ms[0]); flipSet('fc-m1','fv-m1',ms[1]);
-  flipSet('fc-s0','fv-s0',ss[0]); flipSet('fc-s1','fv-s1',ss[1]);
-  q('f-ampm').textContent=S.h12?ampm:'';
+  for (let i=0; i<8; i++) {
+    const s=document.getElementById('seg-'+i);
+    const ss=new Date(now); ss.setHours(SH+i,0,0,0);
+    const se=new Date(now); se.setHours(SH+i+1,0,0,0);
+    s.className='seg'+(now>=se?' done':now>=ss?' current':'');
+  }
 
-  setBits('h',dh); setBits('m',rm); if (S.secs) setBits('s',rs);
-  q('bv-h').textContent=hs; q('bv-m').textContent=ms; q('bv-s').textContent=ss;
+  document.getElementById('min-t').textContent=ts;
+  document.getElementById('min-fill').style.width=(pct*100)+'%';
+  document.getElementById('min-sub').textContent=before?"Work day hasn't started":after?'Work day complete':pctInt+'% through · '+fmtDur(remMin)+' left';
 
-  q('w-txt').textContent=toWordTime(now);
-  q('w-exact').textContent=hs+':'+ms+':'+ss+(S.h12?' '+ampm:'');
+  for (let i=0; i<8; i++) {
+    const cell=document.getElementById('heat-'+i);
+    const cs=new Date(now); cs.setHours(SH+i,0,0,0);
+    const ce=new Date(now); ce.setHours(SH+i+1,0,0,0);
+    const lbl=cell.querySelector('.heat-lbl').outerHTML;
+    if (now>=ce) { cell.className='heat-cell past'; cell.innerHTML=lbl; }
+    else if (now>=cs) { const p=Math.round(((now-cs)/(ce-cs))*100); cell.className='heat-cell now'; cell.innerHTML=lbl+'<div class="heat-pct">'+p+'%</div>'; }
+    else { cell.className='heat-cell'; cell.innerHTML=lbl; }
+  }
 
-  clearTimeout(tmr);
-  tmr=setTimeout(tick, S.smooth?50:1000-now.getTime()%1000+20);
+  document.getElementById('chip-pct').textContent=pctInt+'%';
+  document.getElementById('chip-rem').textContent=after?'Done':before?'All day':fmtDur(remMin);
+  document.getElementById('chip-date').textContent=now.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+  setTimeout(update, 1000 - now.getTime()%1000 + 20);
 }
-
-setFace('digital');
-applyTheme(0);
-tick();
+update();
 </script>
 </body>
 </html>
