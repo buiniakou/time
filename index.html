@@ -1,121 +1,297 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
 
-    #container {
-      padding: 20px;
-    }
+<style>
+  .tracker { padding: 1.5rem 0; font-family: var(--font-sans); }
+  .face-tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .face-tab { padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .face-tab.active { background: var(--text-primary); color: var(--surface-2); border-color: var(--text-primary); }
+  .face-tab:hover:not(.active) { background: var(--surface-1); color: var(--text-primary); }
 
-    #title {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
+  .face { display: none; }
+  .face.visible { display: block; }
 
-    #progress-container {
-      width: 100%;
-      background-color: #eee;
-      position: relative;
-      height: 50px;
-      border-radius: 5px;
-    }
+  /* FACE 1: Classic bar */
+  .bar-wrap { position: relative; height: 56px; background: var(--surface-1); border-radius: 10px; border: 0.5px solid var(--border); overflow: hidden; margin-bottom: 12px; }
+  .bar-fill { height: 100%; border-radius: 10px; background: #2a78d6; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; transition: width 0.5s ease; min-width: 0; }
+  .bar-time { font-size: 13px; font-weight: 500; color: white; white-space: nowrap; }
+  .bar-time.outside { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+  .hour-ticks { position: relative; height: 8px; margin-bottom: 4px; }
+  .hour-tick { position: absolute; top: 0; width: 1px; height: 8px; background: var(--border); transform: translateX(-50%); }
+  .time-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
 
-    #progress-bar {
-      height: 100%;
-      background-color: #4CAF50;
-      width: 0;
-      position: absolute;
-      border-radius: 5px;
-      font-family: "Helvetica Neue", sans-serif;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  /* FACE 2: Circular clock */
+  .clock-face { display: flex; gap: 2rem; align-items: center; }
+  .ring-wrap { flex-shrink: 0; }
+  .clock-stats { flex: 1; }
+  .stat-row { padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+  .stat-value { font-size: 18px; font-weight: 500; color: var(--text-primary); }
 
-    #time-labels {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
+  /* FACE 3: Segments */
+  .segments-wrap { display: flex; gap: 3px; margin-bottom: 10px; }
+  .seg { flex: 1; height: 36px; border-radius: 4px; background: var(--surface-1); border: 0.5px solid var(--border); transition: background 0.3s, border-color 0.3s; }
+  .seg.done { background: #2a78d6; border-color: #2a78d6; }
+  .seg.current { background: #73c2fb; border-color: #73c2fb; }
+  .seg-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 1rem; }
+  .seg-info { display: flex; gap: 12px; align-items: center; }
+  .seg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    #hour-lines {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 100%;
-    }
+  /* FACE 4: Minimal */
+  .minimal-wrap { text-align: center; padding: 1.5rem 0; }
+  .minimal-time-big { font-size: 52px; font-weight: 500; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
+  .minimal-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .minimal-bar { height: 4px; background: var(--surface-1); border-radius: 2px; overflow: hidden; max-width: 400px; margin: 0 auto 8px; }
+  .minimal-fill { height: 100%; background: var(--text-primary); border-radius: 2px; transition: width 0.5s; }
+  .minimal-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); max-width: 400px; margin: 0 auto; }
 
-    #hour-lines::before {
-      content: "";
-      height: 100%;
-      width: 1px;
-      background-color: #ccc;
-      position: absolute;
-    }
+  /* FACE 5: Heatmap timeline */
+  .heat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 10px; }
+  .heat-cell { height: 44px; border-radius: 6px; display: flex; flex-direction: column; justify-content: flex-end; padding: 4px 6px; font-size: 10px; color: var(--text-muted); background: var(--surface-1); border: 0.5px solid var(--border); }
+  .heat-cell.past { background: #2a78d6; border-color: #2a78d6; color: rgba(255,255,255,0.8); }
+  .heat-cell.now { background: #1baf7a; border-color: #1baf7a; color: white; }
+  .heat-cell.future { }
+  .heat-label { font-weight: 500; }
 
-    #hour-lines span {
-      position: absolute;
-      transform: translateX(-50%);
-    }
-  </style>
-</head>
-<body>
-  <div id="container">
-    <div id="title">Work Progress</div>
-    <div id="progress-container">
-      <div id="progress-bar">
-        <span id="current-time"></span>
+  /* Shared status bar */
+  .status-bar { display: flex; gap: 16px; margin-top: 1rem; flex-wrap: wrap; }
+  .status-chip { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+  .status-chip i { font-size: 14px; }
+  .chip-val { font-weight: 500; color: var(--text-primary); }
+
+  .section-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+</style>
+
+<h2 class="sr-only">Work day progress tracker showing time elapsed from 9 AM to 5 PM</h2>
+
+<div class="tracker">
+  <div class="face-tabs">
+    <button class="face-tab active" onclick="switchFace(0)">Classic bar</button>
+    <button class="face-tab" onclick="switchFace(1)">Ring</button>
+    <button class="face-tab" onclick="switchFace(2)">Segments</button>
+    <button class="face-tab" onclick="switchFace(3)">Minimal</button>
+    <button class="face-tab" onclick="switchFace(4)">Timeline</button>
+  </div>
+
+  <!-- FACE 0: Classic bar -->
+  <div class="face visible" id="face-0">
+    <p class="section-label">Today's progress</p>
+    <div class="bar-wrap">
+      <div class="bar-fill" id="f0-fill" style="width:0%">
+        <span class="bar-time" id="f0-time-in"></span>
       </div>
-      <div id="hour-lines"></div>
+      <span class="bar-time outside" id="f0-time-out" style="display:none"></span>
     </div>
-    <div id="time-labels">
-      <span>9:00 AM</span>
-      <span>10:00 AM</span>
-      <span>11:00 AM</span>
-      <span>12:00 PM</span>
-      <span>1:00 PM</span>
-      <span>2:00 PM</span>
-      <span>3:00 PM</span>
-      <span>4:00 PM</span>
-      <span>5:00 PM</span>
+    <div class="hour-ticks" id="f0-ticks"></div>
+    <div class="time-labels">
+      <span>9 AM</span><span>10</span><span>11</span><span>12 PM</span>
+      <span>1</span><span>2</span><span>3</span><span>4</span><span>5 PM</span>
     </div>
   </div>
 
-  <script>
-    function updateProgressBar() {
-      const progressBar = document.getElementById("progress-bar");
-      const currentTimeSpan = document.getElementById("current-time");
-      const now = new Date();
-      const start = new Date(now);
-      start.setHours(9, 0, 0, 0);
-      const end = new Date(now);
-      end.setHours(17, 0, 0, 0);
+  <!-- FACE 1: Ring -->
+  <div class="face" id="face-1">
+    <div class="clock-face">
+      <div class="ring-wrap">
+        <svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Circular progress ring">
+          <circle cx="80" cy="80" r="68" fill="none" stroke-width="12" stroke="var(--surface-1)" />
+          <circle cx="80" cy="80" r="68" fill="none" stroke-width="12" id="ring-circle"
+            stroke="#2a78d6" stroke-linecap="round"
+            stroke-dasharray="427" stroke-dashoffset="427"
+            transform="rotate(-90 80 80)" style="transition: stroke-dashoffset 0.5s ease;" />
+          <text x="80" y="72" text-anchor="middle" fill="var(--text-primary)" font-size="22" font-weight="500" id="ring-pct">0%</text>
+          <text x="80" y="92" text-anchor="middle" fill="var(--text-muted)" font-size="11" id="ring-time">not started</text>
+        </svg>
+      </div>
+      <div class="clock-stats">
+        <div class="stat-row">
+          <div class="stat-label">Time elapsed</div>
+          <div class="stat-value" id="ring-elapsed">—</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Time remaining</div>
+          <div class="stat-value" id="ring-remain">—</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Finish at</div>
+          <div class="stat-value">5:00 PM</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      if (now < start) {
-        progressBar.style.width = "0";
-        currentTimeSpan.textContent = "Not Started";
-      } else if (now > end) {
-        progressBar.style.width = "100%";
-        currentTimeSpan.textContent = "Completed";
-      } else {
-        const totalDuration = end - start;
-        const currentDuration = now - start;
-        const progress = (currentDuration / totalDuration) * 100;
-        progressBar.style.width = progress + "%";
-        currentTimeSpan.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
+  <!-- FACE 2: Segments -->
+  <div class="face" id="face-2">
+    <p class="section-label">Hour blocks</p>
+    <div class="segments-wrap" id="seg-wrap"></div>
+    <div class="seg-labels">
+      <span>9 AM</span><span>10</span><span>11</span><span>12 PM</span>
+      <span>1</span><span>2</span><span>3</span><span>4</span><span>5 PM</span>
+    </div>
+    <div class="seg-info">
+      <div class="seg-dot" style="background:#2a78d6"></div>
+      <span style="font-size:13px;color:var(--text-secondary)">Completed</span>
+      <div class="seg-dot" style="background:#73c2fb; margin-left:8px;"></div>
+      <span style="font-size:13px;color:var(--text-secondary)">In progress</span>
+      <div class="seg-dot" style="background:var(--surface-1); border:0.5px solid var(--border); margin-left:8px;"></div>
+      <span style="font-size:13px;color:var(--text-secondary)">Upcoming</span>
+    </div>
+  </div>
+
+  <!-- FACE 3: Minimal -->
+  <div class="face" id="face-3">
+    <div class="minimal-wrap">
+      <div class="minimal-time-big" id="min-time">—</div>
+      <div class="minimal-sub" id="min-sub">—</div>
+      <div class="minimal-bar"><div class="minimal-fill" id="min-fill" style="width:0%"></div></div>
+      <div class="minimal-ends"><span>9:00 AM</span><span>5:00 PM</span></div>
+    </div>
+  </div>
+
+  <!-- FACE 4: Timeline heatmap -->
+  <div class="face" id="face-4">
+    <p class="section-label">Hour by hour</p>
+    <div class="heat-grid" id="heat-grid"></div>
+  </div>
+
+  <!-- Status chips (always visible) -->
+  <div class="status-bar">
+    <div class="status-chip"><i class="ti ti-clock" aria-hidden="true"></i><span>Progress</span> <span class="chip-val" id="chip-pct">—</span></div>
+    <div class="status-chip"><i class="ti ti-hourglass" aria-hidden="true"></i><span>Remaining</span> <span class="chip-val" id="chip-rem">—</span></div>
+    <div class="status-chip"><i class="ti ti-calendar" aria-hidden="true"></i><span id="chip-date">—</span></div>
+  </div>
+</div>
+
+<script>
+  const START_H = 9, END_H = 17;
+  let currentFace = 0;
+
+  function switchFace(n) {
+    document.querySelectorAll('.face').forEach((f, i) => f.classList.toggle('visible', i === n));
+    document.querySelectorAll('.face-tab').forEach((t, i) => t.classList.toggle('active', i === n));
+    currentFace = n;
+  }
+
+  function fmt12(h, m) {
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+  }
+
+  function fmtDuration(mins) {
+    if (mins <= 0) return '0m';
+    const h = Math.floor(mins / 60), m = Math.round(mins % 60);
+    return h > 0 ? h + 'h ' + (m > 0 ? m + 'm' : '') : m + 'm';
+  }
+
+  function buildTicks() {
+    const wrap = document.getElementById('f0-ticks');
+    for (let i = 0; i <= 8; i++) {
+      const t = document.createElement('div');
+      t.className = 'hour-tick';
+      t.style.left = (i / 8 * 100) + '%';
+      wrap.appendChild(t);
+    }
+  }
+
+  function buildSegs() {
+    const wrap = document.getElementById('seg-wrap');
+    for (let i = 0; i < 8; i++) {
+      const s = document.createElement('div');
+      s.className = 'seg';
+      s.id = 'seg-' + i;
+      wrap.appendChild(s);
+    }
+  }
+
+  function buildHeat() {
+    const grid = document.getElementById('heat-grid');
+    for (let i = 0; i < 8; i++) {
+      const c = document.createElement('div');
+      c.className = 'heat-cell';
+      c.id = 'heat-' + i;
+      const h = START_H + i;
+      const label = h < 12 ? h + 'AM' : (h === 12 ? '12PM' : (h - 12) + 'PM');
+      c.innerHTML = '<div class="heat-label">' + label + '</div>';
+      grid.appendChild(c);
+    }
+  }
+
+  function update() {
+    const now = new Date();
+    const start = new Date(now); start.setHours(START_H, 0, 0, 0);
+    const end = new Date(now); end.setHours(END_H, 0, 0, 0);
+    const totalMs = end - start;
+    const elapsed = Math.max(0, Math.min(now - start, totalMs));
+    const pct = elapsed / totalMs;
+    const pctInt = Math.round(pct * 100);
+    const elapsedMin = elapsed / 60000;
+    const remainMin = Math.max(0, (totalMs - elapsed) / 60000);
+    const notStarted = now < start, done = now > end;
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // FACE 0: bar
+    const fill = document.getElementById('f0-fill');
+    const timeIn = document.getElementById('f0-time-in');
+    const timeOut = document.getElementById('f0-time-out');
+    const w = notStarted ? 0 : done ? 100 : pct * 100;
+    fill.style.width = w + '%';
+    if (notStarted) { timeIn.textContent = ''; timeOut.style.display = 'block'; timeOut.textContent = 'Not started'; }
+    else if (done) { timeIn.textContent = 'Done!'; timeOut.style.display = 'none'; }
+    else {
+      timeOut.style.display = 'none';
+      if (pct > 0.12) { timeIn.textContent = timeStr; }
+      else { timeIn.textContent = ''; timeOut.style.display = 'block'; timeOut.textContent = timeStr; }
     }
 
-    // Update the progress bar every second
-    setInterval(updateProgressBar, 1000);
+    // FACE 1: ring
+    const circ = 2 * Math.PI * 68;
+    const offset = circ * (1 - pct);
+    document.getElementById('ring-circle').style.strokeDashoffset = notStarted ? circ : (done ? 0 : offset);
+    document.getElementById('ring-pct').textContent = pctInt + '%';
+    document.getElementById('ring-time').textContent = notStarted ? 'not started' : (done ? 'complete' : timeStr);
+    document.getElementById('ring-elapsed').textContent = notStarted ? '—' : fmtDuration(elapsedMin);
+    document.getElementById('ring-remain').textContent = done ? '—' : fmtDuration(remainMin);
 
-    // Initial update
-    updateProgressBar();
-  </script>
-</body>
-</html>
+    // FACE 2: segments
+    for (let i = 0; i < 8; i++) {
+      const seg = document.getElementById('seg-' + i);
+      const segStart = START_H + i, segEnd = segStart + 1;
+      const segStartMs = new Date(now); segStartMs.setHours(segStart, 0, 0, 0);
+      const segEndMs = new Date(now); segEndMs.setHours(segEnd, 0, 0, 0);
+      if (now >= segEndMs) seg.className = 'seg done';
+      else if (now >= segStartMs && now < segEndMs) seg.className = 'seg current';
+      else seg.className = 'seg';
+    }
+
+    // FACE 3: minimal
+    document.getElementById('min-time').textContent = timeStr;
+    document.getElementById('min-fill').style.width = (pct * 100) + '%';
+    if (notStarted) document.getElementById('min-sub').textContent = 'Work day hasn\'t started';
+    else if (done) document.getElementById('min-sub').textContent = 'Work day complete';
+    else document.getElementById('min-sub').textContent = pctInt + '% through the day · ' + fmtDuration(remainMin) + ' left';
+
+    // FACE 4: heat
+    for (let i = 0; i < 8; i++) {
+      const cell = document.getElementById('heat-' + i);
+      const segStart = new Date(now); segStart.setHours(START_H + i, 0, 0, 0);
+      const segEnd = new Date(now); segEnd.setHours(START_H + i + 1, 0, 0, 0);
+      const existing = cell.querySelector('.heat-label').outerHTML;
+      if (now >= segEnd) { cell.className = 'heat-cell past'; cell.innerHTML = existing; }
+      else if (now >= segStart) {
+        const segPct = Math.round(((now - segStart) / (segEnd - segStart)) * 100);
+        cell.className = 'heat-cell now'; cell.innerHTML = existing + '<div>' + segPct + '%</div>';
+      } else { cell.className = 'heat-cell future'; cell.innerHTML = existing; }
+    }
+
+    // Status chips
+    document.getElementById('chip-pct').textContent = pctInt + '%';
+    document.getElementById('chip-rem').textContent = done ? 'Done' : (notStarted ? 'All day' : fmtDuration(remainMin));
+    document.getElementById('chip-date').textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  buildTicks();
+  buildSegs();
+  buildHeat();
+  update();
+  setInterval(update, 1000);
+</script>
